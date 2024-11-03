@@ -1,21 +1,35 @@
 import express from "express";
+const router = express.Router();
+import {getConnectedClient} from "./database.js";
+import { Collection } from "mongodb";
 
-const router = express.Router()
+
+const getCollection=()=>{
+    const client=getConnectedClient();
+    const collection=client.db("todosdb").collection("todos");
+    return collection;
+}
 
 // GET /todos (Get all the todos)
-router.get("/todos", (req, res) => {
+router.get("/todos",async (req, res) => {
+    const collection=getCollection();
+    const todos=await collection.find({}).toArray();
+
     res.status(200)
-        .json({
-            message: "Get request to /api/todos"
-        })
+        .json(todos)
 })
 
 // POST /todos (Create todos)
-router.post("/todos", (req, res) => {
+router.post("/todos", async (req, res) => {
+    const collection=getCollection();
+    const {todo}=req.body;
+    const newTodo=await collection.insertOne({todo,status:false});
+    console.log(todo);
+    
     res.status(201)
         .json({
-            message: "Post request to /api/todos"
-        })
+            todo,status:false,_id:newTodo.insertedId
+        });
 })
 
 // DELETE /todos/:id (Delete todos)
